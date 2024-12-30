@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Capture Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .input-group { margin: 20px 0; }
+        input[type="url"] { width: 80%; padding: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #preview { margin-top: 20px; max-width: 100%; }
+        #error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Simple Screenshot Capture</h1>
+    <div class="input-group">
+        <input type="url" id="urlInput" placeholder="Enter URL (e.g., https://example.com)" />
+        <button onclick="captureURL()">Capture</button>
+    </div>
+    <div id="error"></div>
+    <div id="preview"></div>
+
+    <script>
+        async function captureURL() {
+            const url = document.getElementById('urlInput').value;
+            const errorDiv = document.getElementById('error');
+            const previewDiv = document.getElementById('preview');
+            
+            if (!url) {
+                errorDiv.textContent = 'Please enter a URL';
+                return;
+            }
+
+            try {
+                // Note: This will only work for same-origin URLs due to CORS
+                const response = await fetch(url);
+                const text = await response.text();
+                
+                // Create a temporary container
+                const temp = document.createElement('div');
+                temp.innerHTML = text;
+                document.body.appendChild(temp);
+
+                // Capture the content
+                const canvas = await html2canvas(temp);
+                document.body.removeChild(temp);
+
+                // Display the screenshot
+                previewDiv.innerHTML = '';
+                previewDiv.appendChild(canvas);
+
+                // Create download link
+                const link = document.createElement('a');
+                link.download = 'screenshot.png';
+                link.href = canvas.toDataURL();
+                link.textContent = 'Download Screenshot';
+                link.style.display = 'block';
+                link.style.marginTop = '10px';
+                previewDiv.appendChild(link);
+
+                errorDiv.textContent = '';
+            } catch (error) {
+                errorDiv.textContent = 'Error: Cannot capture this URL due to CORS restrictions. ' + 
+                                      'Consider using browser built-in tools instead.';
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
